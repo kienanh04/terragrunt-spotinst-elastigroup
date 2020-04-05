@@ -59,6 +59,7 @@ locals {
 
   public_subnets  = "${compact(split(",", (length(var.subnet_ids) == "0" ? join(",", data.terraform_remote_state.vpc.public_subnets) : join(",", var.subnet_ids))))}"
   private_subnets = "${compact(split(",", (length(var.subnet_ids) == "0" ? join(",", data.terraform_remote_state.vpc.private_subnets) : join(",", var.subnet_ids))))}"
+  private_zone_id = "${coalesce(var.private_zone_id,data.terraform_remote_state.vpc.private_zone_id)}"
   subnet_ids = "${compact(split(",", (var.is_public ? join(",", local.public_subnets) : join(",", local.private_subnets))))}"
   key_name   = "${coalesce(var.key_name,data.terraform_remote_state.vpc.key_name)}"
   image_id   = "${coalesce(var.image_id,data.aws_ami.amazon2.id)}"
@@ -92,7 +93,7 @@ module "elastigroup" {
 
   ## Route53:
   route53_local      = "${var.route53_local}"
-  private_zone_id    = "${var.private_zone_id}"
+  private_zone_id    = "${local.private_zone_id}"
   domain_local       = "${var.domain_local}"
   private_record_ttl = "${var.private_record_ttl}"
   route53_temp_ip    = "${var.route53_temp_ip}"
