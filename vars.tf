@@ -31,6 +31,7 @@ variable "tags" {
     "value" = "true"
   }]
 } 
+variable "enable_env_tags" { default = true }
 
 /// AWS Route53 local:
 variable "route53_local" { default = true }

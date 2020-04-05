@@ -60,14 +60,21 @@ locals {
   public_subnets  = "${compact(split(",", (length(var.subnet_ids) == "0" ? join(",", data.terraform_remote_state.vpc.public_subnets) : join(",", var.subnet_ids))))}"
   private_subnets = "${compact(split(",", (length(var.subnet_ids) == "0" ? join(",", data.terraform_remote_state.vpc.private_subnets) : join(",", var.subnet_ids))))}"
   private_zone_id = "${coalesce(var.private_zone_id,data.terraform_remote_state.vpc.private_zone_id)}"
+
   subnet_ids = "${compact(split(",", (var.is_public ? join(",", local.public_subnets) : join(",", local.private_subnets))))}"
   key_name   = "${coalesce(var.key_name,data.terraform_remote_state.vpc.key_name)}"
   image_id   = "${coalesce(var.image_id,data.aws_ami.amazon2.id)}"
   name       = "${coalesce(var.customized_name,"${lower(var.project_env_short)}-${lower(var.name)}")}"
+
+  env_tags      = {
+    enabled     = { Env = "${var.project_env}" }
+    not_enabled = {} 
+  }
 }
 
 data "aws_security_groups" "ec2" {
-  tags = "${merge(var.source_ec2_sg_tags, map("Env", "${var.project_env}"))}"
+  tags  = "${merge(var.source_ec2_sg_tags,local.env_tags[var.enable_env_tags ? "enabled" : "not_enabled"])}"
+
   filter {
     name   = "vpc-id"
     values = ["${data.terraform_remote_state.vpc.vpc_id}"]
